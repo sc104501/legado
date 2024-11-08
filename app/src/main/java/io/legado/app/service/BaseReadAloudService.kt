@@ -233,7 +233,7 @@ abstract class BaseReadAloudService : BaseService(),
             readAloudNumber = textChapter.getReadLength(pageIndex) + startPos
             readAloudByPage = getPrefBoolean(PreferKey.readAloudByPage)
             contentList = textChapter.getNeedReadAloud(0, readAloudByPage, 0)
-                .split("\n")
+                .split("\n").chunked(3).map { it.joinToString(" ") }
                 .filter { it.isNotEmpty() }
             var pos = startPos
             val page = textChapter.getPage(pageIndex)!!
@@ -245,6 +245,9 @@ abstract class BaseReadAloudService : BaseService(),
                 }
             }
             nowSpeak = textChapter.getParagraphNum(readAloudNumber + 1, readAloudByPage) - 1
+            if (nowSpeak % 3 != 0) {
+                nowSpeak = (nowSpeak / 3 + 1) * 3
+            }
             if (!readAloudByPage && startPos == 0 && !toLast) {
                 pos = page.chapterPosition -
                         textChapter.paragraphs[nowSpeak].chapterPosition
@@ -259,6 +262,7 @@ abstract class BaseReadAloudService : BaseService(),
                 }
             }
             paragraphStartPos = pos
+            nowSpeak /= 3
             launch(Main) {
                 if (play) play() else pageChanged = true
             }
